@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Jille/go-osc/osc"
-	"github.com/Jille/rcf-m18/gen/out"
+	"github.com/Jille/rcf-m18/rcfm18"
 )
 
 type Input struct {

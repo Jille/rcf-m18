@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Jille/rcf-m18/gen/out"
+	"github.com/Jille/rcf-m18/rcfm18"
 )
 
 var (
