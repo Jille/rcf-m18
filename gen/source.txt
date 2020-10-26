@@ -1,0 +1,194 @@
+# request - no state mutation, response desired
+#         RequestFirmwareVersion() error
+#         OnFirmwareVersionRequest func(*Context, float32) (float32, error)
+#         OnFirmwareVersionResponse(float32) error
+# connset - set parameter for this connection
+#         OnOptimizedMeterSendingRequest(msg *osc.Message, s1 string) error
+#         SetOptimizedMeterSending(string) error
+# set - set parameter
+#         SetFader(page, channel, f1 float32) error
+#         OnFaderSet(page, channel, f1 float32) error
+#         OnFaderSet(page, channel, f1 float32) error
+# meters - special case for receiving all vumeters
+
+/22/00/gb_100 - request FirmwareVersion 0 string
+	>receive
+		return "02.10.0225", nil
+
+/22/00/gb_146 - request TargetID " " string
+	>receive
+		return "0", nil // M18
+
+/22/00/gb_275 - request SerialNumber " " string
+	>receive
+		return "fake m18", nil
+
+/22/00/gb_172 - connset OptimizedMeterSending stringbool -
+	>receive
+		c.Connection().OptimizedMeterSending = b1
+		c.DontReply()
+
+/22/00/gb_272 - connset DateTime string -
+	>receive
+		// %Y%m%d%H%M.%s
+		c.DontReply()
+
+# what is the output?
+# fetch: /27/00/gb_78 " "
+# link: /27/0/gb_(channel-1/2) 1/0
+# response: /27/00/gb_78 "3-7-9" # indexes of channels to merge away
+/27/00/gb_78 - request LinkedStereoChannels string -
+	>receive
+		c.DontReply() // TBD
+/27/00/ut_000-009 - set LinkStereoChannel bool
+
+# Mutes
+/00/00/mg_000 - set GlobalMute bool
+
+# Main
+/00/00/mt_000 - set MainMute bool
+/00/00/fd_000 - set MainOut float32
+
+# Input x output
+/1-10/1-23/fd_000 - set Fader float32
+/1-10/1-23/mt_000 - set Mute bool
+
+# Input channels
+/01/1-20/bl_000 - set InputPan float32
+/01/1-20/sl_000 - set Phones bool
+/01/1-8/pg_000 - set InputPreGain float32
+/01/9-10/pg_000 - set InputGainLevelAndBoost float32
+# ^ bitmask: 1=boost; 2=(0=-10dBV 1=+4dBu)
+/01/11-18/pg_000 - set InputGainLevel float32
+# ^ 0=-10dBV 1=+4dBu
+/01/1-10/pg_001 - set InputPreTrim float32
+/01/1-18/ph_000 - set InputInvertPhase bool
+/01/1-18/hp_000 - set InputPreFreq float32
+/01/1-18/hp_001 - set InputHPF bool
+/9-10/1-20/pr_000 - set InputPrePostGain bool
+	>encode
+		page += 4
+	>decode
+		page -= 4
+
+# Input EQ
+!enum EQMode
+	0 StandardEQ
+	1 VintageEQ
+	2 SmoothEQ
+!enum EQSmoothness
+	0 SmoothnessA
+	0.5 SmoothnessB
+	1 SmoothnessC
+/01/1-20/eq_000 - set EQMode EQMode
+/01/1-20/eq_001 - set AdvancedEQ bool
+/01/1-20/eq_002 - set EQ bool
+/01/1-20/eq_003 - set EQBand1Gain float32
+/01/1-20/eq_004 - set EQBand1Freq float32
+/01/1-20/eq_005 - set EQBand1Smoothness EQSmoothness
+/01/1-20/eq_007 - set EQBand2Gain float32
+/01/1-20/eq_008 - set EQBand2Freq float32
+/01/1-20/eq_009 - set EQBand2Q float32
+/01/1-20/eq_010 - set EQBand3Gain float32
+/01/1-20/eq_011 - set EQBand3Freq float32
+/01/1-20/eq_012 - set EQBand3Q float32
+/01/1-20/eq_013 - set EQBand4Gain float32
+/01/1-20/eq_014 - set EQBand4Freq float32
+/01/1-20/eq_015 - set EQBand4Smoothness EQSmoothness
+
+# Outputs
+/26/1-6/fd_000 - set AuxOut float32
+/26/1-6/mt_000 - set AuxOutMute bool
+/26/1-6/eq_002 - set AuxOutEQ bool
+
+# Phones
+/13/00/fd_000 - set PhonesOut float32
+/13/00/mt_000 - set PhonesMute bool
+
+# FXs
+/00/01/mg_000 - set FXsMute bool
+/2-3/00/fd_000 - set FXSend float32
+	>encode
+		page += 1
+	>decode
+		page -= 1
+/2-3/00/mt_000 - set FXSendMute bool
+	>encode
+		page += 1
+	>decode
+		page -= 1
+
+# /0-99/11/np_000 - 
+
+/22/00/gb_101-120 - set InputName string
+	>encode
+		control += 100
+	>decode
+		control -= 100
+
+/22/00/gb_121-126 - set AuxOutName string
+	>encode
+		control += 120
+	>decode
+		control -= 120
+
+!enum StartupMode
+	"0" InitMixer
+	"1" LastShow
+/22/00/gb_209 - set StartupMode StartupMode
+/22/00/gb_222 - set RestoreDefault "1"
+!enum PhonesMode
+	"0" PFLMode
+	"1" PersonalMixMode
+/22/00/gb_070 - set PhonesMode PhonesMode
+
+!enum BridgeMode
+	"NONE" DontBridge
+	"LAN_NAT" BridgeLANAndNAT
+/22/00/gb_022 - set BridgeMode BridgeMode
+
+/22/00/gb_065 - set Phantom1To4 stringbool
+/22/00/gb_066 - set Phantom5To8 stringbool
+/22/00/gb_241 - set SnapshotIncludesMFX1PatchRecall stringbool
+/22/00/gb_242 - set SnapshotIncludesMFX2PatchRecall stringbool
+/22/00/gb_243 - set SnapshotIncludesMFX3PatchRecall stringbool
+/22/00/gb_244 - set SnapshotIncludesMFX4PatchRecall stringbool
+!enum MFX1And2Channels
+	"0" Channel5And6
+	"1" Channel7And8
+/22/00/gb_245 - set MFX1And2Channels MFX1And2Channels
+/22/00/gb_246 - set MFX1Boost stringbool
+/22/00/gb_247 - set MFX2Boost stringbool
+/22/00/gb_248 - set MFX3Boost stringbool
+/22/00/gb_249 - set MFX4Boost stringbool
+
+# Input routing
+!enum Channel10Source
+	"0" AnalogInput10
+	"1" AnalogInput9
+/22/00/gb_300 - set Ch10Source Channel10Source
+!enum Channel17Source
+	"0" AnalogInput17
+	"1" PlayerTrack3
+/22/00/gb_282 - set Ch17Source Channel17Source
+!enum Channel18Source
+	"0" AnalogInput18
+	"1" PlayerTrack4
+	"2" Metronome
+/22/00/gb_283 - set Ch18Source Channel18Source
+
+# DCA groups
+/01/1-4/mg_000 - set DCAMute bool
+!enum AssignDCAGroup
+	0 AssignDCANone
+	1 AssignDCA1
+	2 AssignDCA2
+	3 AssignDCA3
+	4 AssignDCA4
+/01/1-23/sg_000 - set AssignDCAGroup AssignDCAGroup
+
+/00/00/pl_000 - request Poll 1 -
+	>receive
+		c.DontReply()
+
+/00/00/vmeter_000 - meters Meters

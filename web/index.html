@@ -1,0 +1,98 @@
+<html ng-app="rcfmApp">
+<head>
+<title>RCF M18</title>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<script type="text/javascript">
+	let app = angular.module('rcfmApp', []);
+	var conn;
+
+	app.controller('rcfmCtrl', function($scope) {
+		$scope.meters = new Array(39).fill(0);
+
+		$(function() {
+			conn = new WebSocket("ws://{{.Host}}/ws");
+			conn.onclose = function(evt) {
+				document.body.style.backgroundColor = 'red';
+				setTimeout(function() {
+					location.reload();
+				}, 5000);
+			}
+			conn.onmessage = function(evt) {
+				$scope.$apply(function() {
+					$scope.meters = JSON.parse(evt.data);
+				});
+			}
+		});
+	});
+</script>
+<style type="text/css">
+	body {
+		background-color: black;
+		color: white;
+	}
+	.meter {
+		vertical-align: bottom;
+		width: 22px;
+		height: 100px;
+		text-align: center;
+	}
+	.meterbar {
+		background-color: red;
+		width: 22px;
+	}
+	.label {
+		text-align: center;
+	}
+</style>
+</head>
+{{define "meter"}}
+			<td class="meter">
+				<div class="meterbar" ng-style="{'height': meters[{{.}}] +'px'}">
+					&nbsp;
+				</div>
+			</td>
+{{end}}
+<body ng-controller="rcfmCtrl">
+	<table>
+		<tr>
+{{range $idx, $label := .Meters}}
+{{if lt $idx 23}}
+{{template "meter" $idx }}
+{{end}}
+{{end}}
+		</tr>
+		<tr>
+{{range $idx, $label := .Meters}}
+{{if lt $idx 23}}
+			<td class="label">{{ $label }}</td>
+{{end}}
+{{end}}
+		</tr>
+		<tr>
+			<td class="label" colspan="18">Inputs</td>
+			<td class="label" colspan="2">Player</td>
+			<td class="label" colspan="3">RTNS</td>
+		</tr>
+		<tr>
+{{range $idx, $label := .Meters}}
+{{if ge $idx 23}}
+{{template "meter" $idx }}
+{{end}}
+{{end}}
+		</tr>
+		<tr>
+{{range $idx, $label := .Meters}}
+{{if ge $idx 23}}
+			<td class="label">{{ $label }}</td>
+{{end}}
+{{end}}
+		</tr>
+		<tr>
+			<td class="label" colspan="2">Main</td>
+			<td class="label" colspan="3">Sends</td>
+			<td class="label" colspan="6">Outs</td>
+		</tr>
+	</table>
+</body>
+</html>
