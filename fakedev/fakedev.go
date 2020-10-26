@@ -1,3 +1,4 @@
+// Binary fakedev pretends to be an M18 device so you can test your clients.
 package main
 
 import (
@@ -172,6 +173,7 @@ func (f *FakeM18) HandleMsg(msg *osc.Message, src net.Addr, page, channel int, t
 	return errors.New("no handler")
 }
 
+// StringArg extracts a string from message msg.
 func (f *FakeM18) StringArg(msg *osc.Message) (string, error) {
 	if len(msg.Arguments) != 1 {
 		return "", fmt.Errorf("message had %d arguments, expected 1", len(msg.Arguments))
@@ -183,6 +185,7 @@ func (f *FakeM18) StringArg(msg *osc.Message) (string, error) {
 	return s, nil
 }
 
+// FloatArg extracts a float from message msg.
 func (f *FakeM18) FloatArg(msg *osc.Message) (float32, error) {
 	if len(msg.Arguments) != 1 {
 		return 0, fmt.Errorf("message had %d arguments, expected 1", len(msg.Arguments))
@@ -194,6 +197,7 @@ func (f *FakeM18) FloatArg(msg *osc.Message) (float32, error) {
 	return fv, nil
 }
 
+// FloatsArg extracts a slice of floats from message msg.
 func (f *FakeM18) FloatsArg(msg *osc.Message) ([]float32, error) {
 	ret := make([]float32, len(msg.Arguments))
 	for i, v := range msg.Arguments {
