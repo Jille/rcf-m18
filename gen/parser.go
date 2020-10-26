@@ -469,7 +469,7 @@ func gen(as []address, es []enum) string {
 	o.wln(`}`)
 	o.wln(``)
 	o.wln(`func (s *RCFM18Server) Dispatch(cx *Context) error {`)
-	o.generateDispatcher(as, "s")
+	o.generateDispatcher(as, "s", false)
 	o.wln(`}`)
 	o.wln(``)
 	o.wln(`type RCFM18Client struct {`)
@@ -504,7 +504,7 @@ func gen(as []address, es []enum) string {
 	o.wln(`}`)
 	o.wln(``)
 	o.wln(`func (c *RCFM18Client) Dispatch(cx *Context) error {`)
-	o.generateDispatcher(as, "c")
+	o.generateDispatcher(as, "c", true)
 	o.wln(`}`)
 
 	for _, a := range as {
@@ -561,8 +561,11 @@ func gen(as []address, es []enum) string {
 	return o.buf.String()
 }
 
-func (o *out) generateDispatcher(as []address, vn string) {
+func (o *out) generateDispatcher(as []address, vn string, client bool) {
 	for _, a := range as {
+		if a.Name == "Meters" && !client {
+			continue
+		}
 		var conds []string
 		conds = append(conds, fmt.Sprintf("cx.addressType == %q", a.AddressType))
 		if a.MinPage == a.MaxPage {

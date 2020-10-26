@@ -2485,9 +2485,6 @@ func (s *RCFM18Server) Dispatch(cx *Context) error {
 	if cx.addressType == "pl" && cx.page == 0 && cx.channel == 0 && cx.control == 0 {
 		return s.PollMessageHandler(cx)
 	}
-	if cx.addressType == "vmeter" && cx.page == 0 && cx.channel == 0 && cx.control == 0 {
-		return s.MetersMessageHandler(cx)
-	}
 	return ErrNoHandler
 }
 
